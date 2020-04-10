@@ -1,22 +1,42 @@
+const fs = require('fs');
+const axios = require('axios');
 const core = require('@actions/core');
-const wait = require('./wait');
+const { context } = require('@actions/github');
 
+const run = async () => {
+  try {
+    const repo = context.repo.repo;
+    const owner = context.repo.owner;
+    const language = core.getInput('lang');
 
-// most @actions toolkit packages have async methods
-async function run() {
-  try { 
-    const ms = core.getInput('milliseconds');
-    console.log(`Waiting ${ms} milliseconds ...`)
+    const dir = './.lighthouseci';
+    const [file] = fs
+      .readdirSync(dir)
+      .filter((f) => f.startsWith('lhr-') && f.endsWith('.json'));
+    const lhr = JSON.parse(fs.readFileSync(`${dir}/${file}`, 'utf8'));
 
-    core.debug((new Date()).toTimeString())
-    await wait(parseInt(ms));
-    core.debug((new Date()).toTimeString())
+    const { categories } = lhr;
+    const stats = Object.keys(categories)
+      .filter((key) => key !== 'pwa')
+      .reduce((props, key) => {
+        props[key.replace('-', '')] = categories[key].score;
+        return props;
+      }, {});
 
-    core.setOutput('time', new Date().toTimeString());
-  } 
-  catch (error) {
+    const report = {
+      repo,
+      owner,
+      language,
+      ...stats,
+      type: 'challenge-04',
+      source: 'lighthouse'
+    };
+
+    const server = core.getInput('server');
+    await axios.post(`${server}/api/entry-tests`, { report });
+  } catch (error) {
     core.setFailed(error.message);
   }
-}
+};
 
-run()
+run();
