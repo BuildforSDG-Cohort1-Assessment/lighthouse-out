@@ -1,7 +1,7 @@
 {
   "name": "lighthouse-out",
   "version": "1.0.0",
-  "description": "JavaScript Action Template",
+  "description": "Lighthouse Report Action",
   "keywords": [
     "GitHub",
     "Actions",
@@ -20,9 +20,7 @@
   },
   "homepage": "https://github.com/BuildforSDG-Cohort1-Assessment/lighthouse-out#readme",
   "scripts": {
-    "lint": "eslint index.js",
-    "package": "ncc build index.js -o dist",
-    "test": "eslint index.js && jest"
+    "package": "ncc build index.js -m -o dist"
   },
   "dependencies": {
     "@actions/core": "^1.2.3",
